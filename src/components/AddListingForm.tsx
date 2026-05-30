@@ -96,7 +96,7 @@ export default function AddListingForm() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 pt-10 px-4 pb-24 overflow-y-auto">
+    <div className="flex flex-col h-full bg-slate-50 pt-10 md:pt-6 px-4 pb-24 overflow-y-auto">
       <div className="max-w-xl mx-auto w-full">
         <div className="mb-6">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create Listing</h1>

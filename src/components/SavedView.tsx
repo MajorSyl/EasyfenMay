@@ -40,8 +40,8 @@ export default function SavedView() {
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      <div className="bg-white px-4 pt-12 pb-4 shadow-sm z-10 sticky top-0">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Saved Items</h1>
+      <div className="bg-white px-4 pt-12 md:pt-6 pb-4 shadow-sm z-10 sticky top-0">
+        <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800">Saved Items</h1>
       </div>
 
       <div className="p-4 flex-1">

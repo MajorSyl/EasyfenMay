@@ -105,57 +105,117 @@ export default function App() {
   return (
     <AppContext.Provider value={contextValue}>
       {/* Responsive workspace boundary */}
-      <div className="w-full max-w-7xl mx-auto min-h-screen bg-white shadow-xl relative pb-20 overflow-hidden flex flex-col">
-        
-        {/* Dynamic App Content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
-          {renderContent()}
-        </div>
+      <div className="w-full min-h-screen bg-slate-50 md:bg-slate-100 flex justify-center">
+        <div className="w-full max-w-7xl mx-auto min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row">
+          
+          {/* Side Navigation Panel (Desktop) */}
+          {(!selectedListing && !showUpgrade && isAuthenticated) && (
+            <aside className="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white z-50 py-8 px-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+              <div className="mb-10 pl-2">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-800">Easyfen</h1>
+              </div>
+              <div className="flex flex-col gap-2">
+                <DesktopNavItem 
+                  icon={<Home size={22} />} 
+                  label="Home" 
+                  isActive={currentView === 'home'} 
+                  onClick={() => setCurrentView('home')} 
+                />
+                <DesktopNavItem 
+                  icon={<Search size={22} />} 
+                  label="Search" 
+                  isActive={currentView === 'search'} 
+                  onClick={() => setCurrentView('search')} 
+                />
+                <DesktopNavItem 
+                  icon={<PlusSquare size={22} />} 
+                  label="Add Listing" 
+                  isActive={currentView === 'add'} 
+                  onClick={() => setCurrentView('add')} 
+                />
+                <DesktopNavItem 
+                  icon={<Heart size={22} />} 
+                  label="Saved" 
+                  isActive={currentView === 'saved'} 
+                  onClick={() => setCurrentView('saved')} 
+                />
+                <DesktopNavItem 
+                  icon={<User size={22} />} 
+                  label="Profile" 
+                  isActive={currentView === 'profile'} 
+                  onClick={() => setCurrentView('profile')} 
+                />
+              </div>
+            </aside>
+          )}
 
-        {/* Bottom Navigation Panel */}
-        {(!selectedListing && !showUpgrade && isAuthenticated) && (
-          <nav className="absolute bottom-0 w-full bg-white border-t border-gray-100 flex items-center justify-center pt-3 pb-safe z-50 rounded-t-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-            <div className="flex justify-around w-full max-w-md px-2 pb-3">
-              <NavItem 
-                icon={<Home size={24} />} 
-                label="Home" 
-                isActive={currentView === 'home'} 
-                onClick={() => setCurrentView('home')} 
-              />
-              <NavItem 
-                icon={<Search size={24} />} 
-                label="Search" 
-                isActive={currentView === 'search'} 
-                onClick={() => setCurrentView('search')} 
-              />
-              <NavItem 
-                icon={<PlusSquare size={24} />} 
-                label="Add" 
-                isActive={currentView === 'add'} 
-                onClick={() => setCurrentView('add')} 
-              />
-              <NavItem 
-                icon={<Heart size={24} />} 
-                label="Saved" 
-                isActive={currentView === 'saved'} 
-                onClick={() => setCurrentView('saved')} 
-              />
-              <NavItem 
-                icon={<User size={24} />} 
-                label="Profile" 
-                isActive={currentView === 'profile'} 
-                onClick={() => setCurrentView('profile')} 
-              />
-            </div>
-          </nav>
-        )}
+          {/* Dynamic App Content */}
+          <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth pb-20 md:pb-0 relative">
+            {renderContent()}
+          </div>
+
+          {/* Bottom Navigation Panel (Mobile) */}
+          {(!selectedListing && !showUpgrade && isAuthenticated) && (
+            <nav className="md:hidden absolute bottom-0 w-full bg-white border-t border-gray-100 flex items-center justify-center pt-3 pb-safe z-50 rounded-t-2xl shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+              <div className="flex justify-around w-full max-w-md px-2 pb-3">
+                <MobileNavItem 
+                  icon={<Home size={24} />} 
+                  label="Home" 
+                  isActive={currentView === 'home'} 
+                  onClick={() => setCurrentView('home')} 
+                />
+                <MobileNavItem 
+                  icon={<Search size={24} />} 
+                  label="Search" 
+                  isActive={currentView === 'search'} 
+                  onClick={() => setCurrentView('search')} 
+                />
+                <MobileNavItem 
+                  icon={<PlusSquare size={24} />} 
+                  label="Add" 
+                  isActive={currentView === 'add'} 
+                  onClick={() => setCurrentView('add')} 
+                />
+                <MobileNavItem 
+                  icon={<Heart size={24} />} 
+                  label="Saved" 
+                  isActive={currentView === 'saved'} 
+                  onClick={() => setCurrentView('saved')} 
+                />
+                <MobileNavItem 
+                  icon={<User size={24} />} 
+                  label="Profile" 
+                  isActive={currentView === 'profile'} 
+                  onClick={() => setCurrentView('profile')} 
+                />
+              </div>
+            </nav>
+          )}
+        </div>
       </div>
     </AppContext.Provider>
   );
 }
 
-// Reusable Navigation Item
-function NavItem({ icon, label, isActive, onClick }: { icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }) {
+// Reusable Desktop Navigation Item
+function DesktopNavItem({ icon, label, isActive, onClick }: { icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }) {
+  return (
+    <button 
+      onClick={onClick} 
+      className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive ? 'bg-sky-50 text-sky-600 font-bold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-semibold'}`}
+    >
+      <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+        {icon}
+      </div>
+      <span className="text-sm tracking-wide">
+        {label}
+      </span>
+    </button>
+  );
+}
+
+// Reusable Mobile Navigation Item
+function MobileNavItem({ icon, label, isActive, onClick }: { icon: React.ReactNode, label: string, isActive: boolean, onClick: () => void }) {
   return (
     <button 
       onClick={onClick} 

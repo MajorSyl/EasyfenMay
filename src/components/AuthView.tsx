@@ -12,49 +12,39 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setErrorMessage('');
+    setResetMessage('');
     
-    // Auto-detect email vs phone
-    const isEmail = identifier.includes('@');
-    // Basic phone formatting for Sierra Leone check if it's just local number (e.g., 76123456)
-    const formattedPhone = !isEmail && !identifier.startsWith('+') ? `+232${identifier.replace(/^0+/, '')}` : identifier;
-
     try {
-      if (isLogin) {
-        if (isEmail) {
-           const { error } = await supabase.auth.signInWithPassword({
-             email: identifier,
-             password
-           });
-           if (error) throw error;
-        } else {
-           const { error } = await supabase.auth.signInWithPassword({
-             phone: formattedPhone,
-             password
-           });
-           if (error) throw error;
-        }
+      if (isForgotPassword) {
+         const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
+           redirectTo: window.location.origin,
+         });
+         if (error) throw error;
+         setResetMessage('Password reset instructions sent to your email.');
+      } else if (isLogin) {
+         const { error } = await supabase.auth.signInWithPassword({
+           email: identifier,
+           password
+         });
+         if (error) throw error;
       } else {
-        if (isEmail) {
-           const { error } = await supabase.auth.signUp({
-             email: identifier,
-             password,
-             options: { data: { full_name: fullName } }
-           });
-           if (error) throw error;
-        } else {
-           const { error } = await supabase.auth.signUp({
-             phone: formattedPhone,
-             password,
-             options: { data: { full_name: fullName } }
-           });
-           if (error) throw error;
-        }
+         const { error } = await supabase.auth.signUp({
+           email: identifier,
+           password,
+           options: { data: { full_name: fullName } }
+         });
+         if (error) throw error;
       }
-      onLogin(); // Successful auth callback
+      if (!isForgotPassword) {
+         onLogin(); // Successful auth callback
+      }
     } catch (err: any) {
       setErrorMessage(err.message || 'Authentication failed. Please try again.');
     } finally {
@@ -93,9 +83,11 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
               type="button"
               onClick={() => {
                 setIsLogin(true);
+                setIsForgotPassword(false);
                 setErrorMessage('');
+                setResetMessage('');
               }}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${isLogin && !isForgotPassword ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Log In
             </button>
@@ -103,9 +95,11 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
               type="button"
               onClick={() => {
                 setIsLogin(false);
+                setIsForgotPassword(false);
                 setErrorMessage('');
+                setResetMessage('');
               }}
-              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${!isLogin && !isForgotPassword ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               Sign Up
             </button>
@@ -125,7 +119,18 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
                   <p>{errorMessage}</p>
                 </motion.div>
               )}
-              {!isLogin && (
+              {resetMessage && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-2xl text-sm font-semibold flex items-center gap-2 mb-2"
+                >
+                  <AlertCircle size={18} className="shrink-0" />
+                  <p>{resetMessage}</p>
+                </motion.div>
+              )}
+              {!isLogin && !isForgotPassword && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -151,38 +156,47 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
             </AnimatePresence>
 
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email or Phone</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                    <User size={18} />
                 </div>
                 <input 
-                  type="text"
+                  type="email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. 76000000 or email@example.com"
+                  placeholder="hello@example.com"
                   required
                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 py-3.5 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all placeholder:text-slate-300"
                 />
               </div>
             </div>
 
-            <div className="space-y-1 mb-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                   <Lock size={18} />
-                </div>
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 py-3.5 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all placeholder:text-slate-300"
-                />
-              </div>
-            </div>
+            <AnimatePresence mode="popLayout">
+              {!isForgotPassword && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-1 mb-2"
+                >
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                       <Lock size={18} />
+                    </div>
+                    <input 
+                      type="password" 
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      required={!isForgotPassword}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 py-3.5 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-sky-500/20 transition-all placeholder:text-slate-300"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <button
               type="submit"
@@ -193,15 +207,36 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
                 <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'Log In' : 'Create Account'}
+                  {isForgotPassword ? 'Send Reset Link' : isLogin ? 'Log In' : 'Create Account'}
                   <ArrowRight size={20} />
                 </>
               )}
             </button>
             
-            {isLogin && (
-              <button type="button" className="text-sm font-bold text-slate-400 hover:text-sky-500 transition-colors mt-2">
+            {isLogin && !isForgotPassword && (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsForgotPassword(true);
+                  setErrorMessage('');
+                  setResetMessage('');
+                }}
+                className="text-sm font-bold text-slate-400 hover:text-sky-500 transition-colors mt-2"
+              >
                 Forgot password?
+              </button>
+            )}
+            {isForgotPassword && (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setIsForgotPassword(false);
+                  setErrorMessage('');
+                  setResetMessage('');
+                }}
+                className="text-sm font-bold text-slate-400 hover:text-sky-500 transition-colors mt-2"
+              >
+                Back to Login
               </button>
             )}
           </form>

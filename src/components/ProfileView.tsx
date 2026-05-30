@@ -77,7 +77,7 @@ export default function ProfileView() {
     <div className="flex flex-col h-full bg-slate-50 overflow-y-auto">
       <div className="max-w-3xl mx-auto w-full">
         {/* Profile Header Area */}
-        <div className="bg-white pt-10 pb-6 px-4 shadow-sm z-10 w-full">
+        <div className="bg-white pt-10 md:pt-6 pb-6 px-4 shadow-sm z-10 w-full">
           
           {/* Profile Card Main */}
           <div className="bg-slate-900 rounded-3xl p-6 text-white relative shadow-xl shadow-slate-900/20 mb-6 overflow-hidden">

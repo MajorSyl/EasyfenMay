@@ -26,9 +26,9 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
   const currentUrl = `https://wa.me/232${listing.profiles?.phone_number?.replace('232', '')}?text=${encodeURIComponent(`Hi, I am interested in your Easyfen listing: ${listing.title} (NLE ${listing.price}). Is it still available?`)}`;
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-white absolute inset-0 z-50">
+    <div className="flex flex-col h-[100dvh] bg-white absolute inset-0 z-[100]">
       {/* Top Fixed Header */}
-      <div className="absolute top-0 w-full z-20 flex justify-between p-4 pt-12">
+      <div className="absolute top-0 w-full z-20 flex justify-between p-4 pt-12 md:pt-6">
         <button 
           onClick={() => setSelectedListing(null)}
           className="w-10 h-10 bg-white/90 backdrop-blur-md shadow-sm rounded-full flex items-center justify-center text-slate-800 active:scale-95 transition-transform"

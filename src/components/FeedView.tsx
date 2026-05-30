@@ -55,8 +55,8 @@ export default function FeedView() {
   return (
     <div className="flex flex-col h-full bg-slate-50">
       {/* Header Sticky Area */}
-      <div className="bg-white px-4 pt-12 pb-4 shadow-sm sticky top-0 z-10">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800 mb-4">Easyfen</h1>
+      <div className="bg-white px-4 pt-12 md:pt-6 pb-4 shadow-sm sticky top-0 z-10">
+        <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800 mb-4">Easyfen</h1>
         
         {/* Search Bar matching the Search view */}
         <div 

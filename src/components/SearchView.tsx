@@ -3,7 +3,7 @@ import { Search as SearchIcon, SlidersHorizontal, MapPin } from 'lucide-react';
 import { Listing } from '../types';
 import { ListingCard } from './FeedView';
 import { useAppContext } from '../App';
-import { AnimatePresence } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
 export default function SearchView() {
@@ -11,6 +11,8 @@ export default function SearchView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [budget, setBudget] = useState('');
   const [allListings, setAllListings] = useState<Listing[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   
   useEffect(() => {
     const fetchListings = async () => {
@@ -25,7 +27,28 @@ export default function SearchView() {
       }
     };
     fetchListings();
+
+    const savedSearches = localStorage.getItem('recentSearches');
+    if (savedSearches) {
+      try {
+        setRecentSearches(JSON.parse(savedSearches));
+      } catch (e) {
+        console.error("Could not parse recent searches", e);
+      }
+    }
   }, []);
+
+  const saveSearch = (query: string) => {
+    if (query.trim() === '') return;
+    const newSearches = [query.trim(), ...recentSearches.filter(s => s !== query.trim())].slice(0, 3);
+    setRecentSearches(newSearches);
+    localStorage.setItem('recentSearches', JSON.stringify(newSearches));
+  };
+
+  const handleChipClick = (query: string) => {
+    setSearchQuery(query);
+    saveSearch(query);
+  };
 
   // Simple client-side search matching
   const results = allListings.filter(item => 
@@ -35,8 +58,8 @@ export default function SearchView() {
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
-      <div className="bg-white px-4 pt-12 pb-6 shadow-sm z-10 sticky top-0 relative">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800 mb-6">Discover</h1>
+      <div className="bg-white px-4 pt-12 md:pt-6 pb-6 shadow-sm z-20 sticky top-0">
+        <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800 mb-6">Discover</h1>
         
         {/* Deep Search Input Block */}
         <div className="space-y-4">
@@ -49,12 +72,42 @@ export default function SearchView() {
               placeholder="Search Goderich, Plumbers, Lands..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  saveSearch(searchQuery);
+                  e.currentTarget.blur();
+                }
+              }}
               className="w-full bg-slate-100 border-none rounded-2xl py-4 pl-12 pr-4 text-slate-900 font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 transition-shadow"
             />
+            
+            <AnimatePresence>
+              {isSearchFocused && recentSearches.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex flex-wrap gap-2 z-50"
+                >
+                  <p className="w-full text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Recent Searches</p>
+                  {recentSearches.map(query => (
+                    <button
+                      key={query}
+                      onClick={() => handleChipClick(query)}
+                      className="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm font-semibold rounded-xl hover:bg-sky-50 hover:text-sky-600 transition-colors"
+                    >
+                      {query}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Quick Filters */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 relative z-10">
              <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                   <span className="font-bold text-xs p-1">NLE</span>

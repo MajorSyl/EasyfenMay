@@ -35,7 +35,7 @@ export default function UpgradeToPremium() {
   return (
     <div className="flex flex-col h-[100dvh] bg-slate-50 absolute inset-0 z-[100]">
       {/* Header */}
-      <div className="bg-white/90 backdrop-blur-md px-4 pt-12 pb-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
+      <div className="bg-white/90 backdrop-blur-md px-4 pt-12 md:pt-6 pb-4 flex items-center justify-between shadow-sm sticky top-0 z-20">
         <div className="flex items-center gap-4">
             <button 
                 onClick={() => setShowUpgrade(false)}
