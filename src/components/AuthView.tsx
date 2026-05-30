@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, ArrowRight, Phone, Lock, User } from 'lucide-react';
+import { ShieldCheck, ArrowRight, Phone, Lock, User, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import slImageUrl from '../assets/images/sierra_leone_bg_1780120225273.png';
 
 export default function AuthView({ onLogin }: { onLogin: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,19 +10,56 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Using a beautiful coastal/city imagery fitting the Sierra Leone (Lumley/Freetown) vibe
-  const slImageUrl = "https://images.unsplash.com/photo-1549419131-7b7fe75cc843?auto=format&fit=crop&w=1200&q=80";
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setErrorMessage('');
     
-    // Simulate Supabase Auth delay
-    setTimeout(() => {
+    // Auto-detect email vs phone
+    const isEmail = identifier.includes('@');
+    // Basic phone formatting for Sierra Leone check if it's just local number (e.g., 76123456)
+    const formattedPhone = !isEmail && !identifier.startsWith('+') ? `+232${identifier.replace(/^0+/, '')}` : identifier;
+
+    try {
+      if (isLogin) {
+        if (isEmail) {
+           const { error } = await supabase.auth.signInWithPassword({
+             email: identifier,
+             password
+           });
+           if (error) throw error;
+        } else {
+           const { error } = await supabase.auth.signInWithPassword({
+             phone: formattedPhone,
+             password
+           });
+           if (error) throw error;
+        }
+      } else {
+        if (isEmail) {
+           const { error } = await supabase.auth.signUp({
+             email: identifier,
+             password,
+             options: { data: { full_name: fullName } }
+           });
+           if (error) throw error;
+        } else {
+           const { error } = await supabase.auth.signUp({
+             phone: formattedPhone,
+             password,
+             options: { data: { full_name: fullName } }
+           });
+           if (error) throw error;
+        }
+      }
+      onLogin(); // Successful auth callback
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Authentication failed. Please try again.');
+    } finally {
       setIsProcessing(false);
-      onLogin();
-    }, 1200);
+    }
   };
 
   return (
@@ -49,18 +88,43 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
           transition={{ duration: 0.4 }}
           className="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md mx-auto flex-1 flex flex-col mb-8"
         >
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-800">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
-            </h2>
-            <div className="bg-sky-50 text-sky-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-              <ShieldCheck size={14} /> Secure
-            </div>
+          <div className="flex bg-slate-100 p-1 rounded-2xl mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(true);
+                setErrorMessage('');
+              }}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${isLogin ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Log In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(false);
+                setErrorMessage('');
+              }}
+              className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${!isLogin ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+            >
+              Sign Up
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="flex-1 flex flex-col gap-4">
             
             <AnimatePresence mode="popLayout">
+              {errorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-rose-50 border border-rose-100 text-rose-600 px-4 py-3 rounded-2xl text-sm font-semibold flex items-center gap-2 mb-2"
+                >
+                  <AlertCircle size={18} className="shrink-0" />
+                  <p>{errorMessage}</p>
+                </motion.div>
+              )}
               {!isLogin && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -141,19 +205,6 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
               </button>
             )}
           </form>
-
-          {/* Toggle Mode */}
-          <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-            <p className="text-sm font-semibold text-slate-500">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button 
-                onClick={() => setIsLogin(!isLogin)}
-                className="ml-2 font-bold text-sky-500 hover:text-sky-600 focus:outline-none"
-              >
-                {isLogin ? 'Sign Up' : 'Log In'}
-              </button>
-            </p>
-          </div>
         </motion.div>
       </div>
     </div>

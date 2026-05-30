@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon, X, MapPin, Building, Wrench, CircleDollarSign } from 'lucide-react';
 import { ListingType } from '../types';
+import { supabase } from '../lib/supabase';
 
 export default function AddListingForm() {
   const [listingType, setListingType] = useState<ListingType>('property');
@@ -32,13 +33,66 @@ export default function AddListingForm() {
   const handleSimulateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
-    // Simulate Supabase Storage Upload
-    console.log(`[Storage] Uploading ${images.length} items to bucket 'listing-images'`);
-    setTimeout(() => {
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to post a listing.');
+      }
+
+      // 1. Upload Images
+      const uploadedImageUrls: string[] = [];
+      for (const file of images) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('listing-images')
+          .upload(filePath, file);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('listing-images')
+          .getPublicUrl(filePath);
+          
+        uploadedImageUrls.push(publicUrlData.publicUrl);
+      }
+
+      // 2. Insert Listing
+      const { error: insertError } = await supabase.from('listings').insert({
+        user_id: user.id,
+        listing_type: listingType,
+        title,
+        description,
+        price: parseFloat(price) || 0,
+        location_name: location,
+        images: uploadedImageUrls,
+        category: listingType === 'property' ? category : null,
+        bedrooms: listingType === 'property' ? parseInt(bedrooms) || null : null,
+        service_type: listingType === 'service' ? serviceType : null,
+      });
+
+      if (insertError) throw insertError;
+
+      alert('Listing created successfully!');
+      
+      // Reset form
+      setImages([]);
+      setTitle('');
+      setPrice('');
+      setDescription('');
+      setLocation('');
+      setBedrooms('');
+      setServiceType('');
+      
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'An error occurred while creating the listing.');
+    } finally {
       setIsUploading(false);
-      alert('Listing created successfully! (Simulated)');
-      // In production: supabase.from('listings').insert({...})
-    }, 1500);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext, useEffect } from 'react';
 import { Home, Search, PlusSquare, Heart, User } from 'lucide-react';
 import FeedView from './components/FeedView';
 import SearchView from './components/SearchView';
@@ -9,6 +9,7 @@ import ListingDetailView from './components/ListingDetailView';
 import UpgradeToPremium from './components/UpgradeToPremium';
 import AuthView from './components/AuthView';
 import { Listing, ViewState } from './types';
+import { supabase } from './lib/supabase';
 
 interface AppContextType {
   currentView: ViewState;
@@ -37,6 +38,24 @@ export default function App() {
   const [savedListingIds, setSavedListingIds] = useState<Set<string>>(new Set(['1'])); // Mock pre-saved
   const [showUpgrade, setShowUpgrade] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+
+  useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setIsInitializing(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const toggleSaved = (id: string) => {
     const newSaved = new Set(savedListingIds);
@@ -60,6 +79,12 @@ export default function App() {
     isAuthenticated,
     setIsAuthenticated
   };
+
+  if (isInitializing) {
+    return <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>;
+  }
 
   // Render main content area
   const renderContent = () => {

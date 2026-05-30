@@ -1,15 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { HeartCrack } from 'lucide-react';
-import { MOCK_LISTINGS } from '../types';
+import { Listing } from '../types';
 import { ListingCard } from './FeedView';
 import { useAppContext } from '../App';
 import { AnimatePresence, motion } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 export default function SavedView() {
   const { setSelectedListing, savedListingIds, toggleSaved } = useAppContext();
+  const [savedListings, setSavedListings] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Filter for saved items
-  const savedListings = MOCK_LISTINGS.filter(item => savedListingIds.has(item.id));
+  useEffect(() => {
+    const fetchSavedListings = async () => {
+      setIsLoading(true);
+      if (savedListingIds.size === 0) {
+        setSavedListings([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      const ids = Array.from(savedListingIds);
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          *,
+          profiles ( full_name, is_verified, phone_number )
+        `)
+        .in('id', ids);
+        
+      if (!error && data) {
+        setSavedListings(data as any as Listing[]);
+      }
+      setIsLoading(false);
+    };
+    
+    fetchSavedListings();
+  }, [savedListingIds]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50">

@@ -1,15 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search } from 'lucide-react';
 import { useAppContext } from '../App';
-import { MOCK_LISTINGS, Listing } from '../types';
+import { Listing } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 export default function FeedView() {
   const { setSelectedListing, savedListingIds, toggleSaved, setCurrentView } = useAppContext();
   const [activeFilter, setActiveFilter] = useState<'all' | 'rent' | 'buy' | 'land' | 'service'>('all');
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          *,
+          profiles ( full_name, is_verified, phone_number )
+        `)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Not enough listings yet
+      if (!data || data.length === 0) {
+        setListings([]);
+      } else {
+        setListings(data as any as Listing[]);
+      }
+    } catch (error) {
+      console.error(error);
+      setListings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter listings based on the active tab
-  const filteredListings = MOCK_LISTINGS.filter(item => {
+  const filteredListings = listings.filter(item => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'service') return item.listing_type === 'service';
     if (activeFilter === 'rent') return item.category === 'rent';
@@ -70,20 +104,27 @@ export default function FeedView() {
 
       {/* Card Grid Area */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-8">
-        <AnimatePresence>
-          {filteredListings.map(listing => (
-            <ListingCard 
-              key={listing.id} 
-              listing={listing}
-              onClick={() => setSelectedListing(listing)}
-              isSaved={savedListingIds.has(listing.id)}
-              onSave={(e) => {
-                e.stopPropagation();
-                toggleSaved(listing.id);
-              }}
-            />
-          ))}
-        </AnimatePresence>
+        {isLoading ? (
+           <div className="col-span-full flex flex-col items-center justify-center py-12 opacity-50">
+             <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+             <p className="text-slate-500 font-bold text-sm tracking-wide">Loading listings...</p>
+           </div>
+        ) : (
+          <AnimatePresence>
+            {filteredListings.map(listing => (
+              <ListingCard 
+                key={listing.id} 
+                listing={listing}
+                onClick={() => setSelectedListing(listing)}
+                isSaved={savedListingIds.has(listing.id)}
+                onSave={(e) => {
+                  e.stopPropagation();
+                  toggleSaved(listing.id);
+                }}
+              />
+            ))}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

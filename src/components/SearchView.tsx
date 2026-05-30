@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, SlidersHorizontal, MapPin } from 'lucide-react';
-import { MOCK_LISTINGS } from '../types';
+import { Listing } from '../types';
 import { ListingCard } from './FeedView';
 import { useAppContext } from '../App';
 import { AnimatePresence } from 'motion/react';
+import { supabase } from '../lib/supabase';
 
 export default function SearchView() {
   const { setSelectedListing, savedListingIds, toggleSaved } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [budget, setBudget] = useState('');
+  const [allListings, setAllListings] = useState<Listing[]>([]);
   
-  // Simulated search matching
-  const results = MOCK_LISTINGS.filter(item => 
+  useEffect(() => {
+    const fetchListings = async () => {
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          *,
+          profiles ( full_name, is_verified, phone_number )
+        `);
+      if (!error && data) {
+        setAllListings(data as any as Listing[]);
+      }
+    };
+    fetchListings();
+  }, []);
+
+  // Simple client-side search matching
+  const results = allListings.filter(item => 
     (searchQuery === '' || item.title.toLowerCase().includes(searchQuery.toLowerCase()) || item.location_name.toLowerCase().includes(searchQuery.toLowerCase())) &&
     (budget === '' || item.price <= parseInt(budget))
   );
