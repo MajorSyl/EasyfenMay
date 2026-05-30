@@ -35,10 +35,20 @@ export const useAppContext = () => {
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('home');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [savedListingIds, setSavedListingIds] = useState<Set<string>>(new Set(['1'])); // Mock pre-saved
+  const [savedListingIds, setSavedListingIds] = useState<Set<string>>(new Set());
   const [showUpgrade, setShowUpgrade] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+
+  const loadSavedListings = async (userId: string) => {
+    const { data } = await supabase
+      .from('saved_listings')
+      .select('listing_id')
+      .eq('user_id', userId);
+    if (data) {
+      setSavedListingIds(new Set(data.map((r: any) => r.listing_id)));
+    }
+  };
 
   useEffect(() => {
     let resolved = false;
@@ -56,6 +66,7 @@ export default function App() {
         clearTimeout(timeout);
         setIsAuthenticated(!!session);
         setIsInitializing(false);
+        if (session?.user) loadSavedListings(session.user.id);
       }
     }).catch(() => {
       if (!resolved) {
@@ -65,10 +76,13 @@ export default function App() {
       }
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      if (session?.user) {
+        loadSavedListings(session.user.id);
+      } else {
+        setSavedListingIds(new Set());
+      }
     });
 
     return () => {
@@ -77,14 +91,21 @@ export default function App() {
     };
   }, []);
 
-  const toggleSaved = (id: string) => {
+  const toggleSaved = async (id: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     const newSaved = new Set(savedListingIds);
     if (newSaved.has(id)) {
       newSaved.delete(id);
+      setSavedListingIds(newSaved);
+      await supabase.from('saved_listings').delete()
+        .eq('user_id', user.id).eq('listing_id', id);
     } else {
       newSaved.add(id);
+      setSavedListingIds(newSaved);
+      await supabase.from('saved_listings').insert({ user_id: user.id, listing_id: id });
     }
-    setSavedListingIds(newSaved);
   };
 
   const contextValue = {
