@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { Home, Search, PlusSquare, Heart, User } from 'lucide-react';
+import { Hop as Home, Search, SquarePlus as PlusSquare, Heart, User } from 'lucide-react';
 import FeedView from './components/FeedView';
 import SearchView from './components/SearchView';
 import AddListingForm from './components/AddListingForm';
@@ -41,20 +41,40 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check initial session
+    let resolved = false;
+
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        setIsInitializing(false);
+      }
+    }, 3000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-      setIsInitializing(false);
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeout);
+        setIsAuthenticated(!!session);
+        setIsInitializing(false);
+      }
+    }).catch(() => {
+      if (!resolved) {
+        resolved = true;
+        clearTimeout(timeout);
+        setIsInitializing(false);
+      }
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const toggleSaved = (id: string) => {
