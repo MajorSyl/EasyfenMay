@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CircleCheck as CheckCircle2, TrendingUp, Loader as Loader2 } from 'lucide-react';
 import { Profile, Listing } from '../types';
 import { useAppContext } from '../App';
 import { ListingCard } from './FeedView';
@@ -26,7 +26,7 @@ export default function ProfileView() {
           supabase.from('profiles').select('*').eq('id', user.id).single(),
           supabase.from('listings').select(`
             *,
-            profiles ( full_name, is_verified, phone_number )
+            profiles!listings_user_id_fkey ( full_name, is_verified, phone_number )
           `).eq('user_id', user.id).order('created_at', { ascending: false })
         ]);
 

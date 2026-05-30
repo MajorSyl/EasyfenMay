@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search } from 'lucide-react';
+import { Camera, MapPin, Eye, BadgeCheck, CircleCheck as CheckCircle2, Search } from 'lucide-react';
 import { useAppContext } from '../App';
 import { Listing } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,7 +22,7 @@ export default function FeedView() {
         .from('listings')
         .select(`
           *,
-          profiles ( full_name, is_verified, phone_number )
+          profiles!listings_user_id_fkey ( full_name, is_verified, phone_number )
         `)
         .order('created_at', { ascending: false });
         

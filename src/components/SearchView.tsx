@@ -20,7 +20,7 @@ export default function SearchView() {
         .from('listings')
         .select(`
           *,
-          profiles ( full_name, is_verified, phone_number )
+          profiles!listings_user_id_fkey ( full_name, is_verified, phone_number )
         `);
       if (!error && data) {
         setAllListings(data as any as Listing[]);
