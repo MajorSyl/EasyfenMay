@@ -12,6 +12,8 @@ export interface Profile {
   phone_number: string;
   role: UserRole;
   is_verified: boolean;
+  avatar_url: string | null;
+  bio: string;
   created_at: string;
 }
 
