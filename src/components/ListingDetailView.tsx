@@ -23,7 +23,9 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
     }
   };
 
-  const currentUrl = `https://wa.me/232${listing.profiles?.phone_number?.replace('232', '')}?text=${encodeURIComponent(`Hi, I am interested in your Easyfen listing: ${listing.title} (NLE ${listing.price}). Is it still available?`)}`;
+  const price = typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price;
+  const phone = listing.profiles?.phone_number?.replace(/^232-?/, '') ?? '';
+  const currentUrl = `https://wa.me/232${phone}?text=${encodeURIComponent(`Hi, I am interested in your Easyfen listing: ${listing.title} (NLE ${price.toLocaleString()}). Is it still available?`)}`;
 
   return (
     <div className="flex flex-col h-[100dvh] bg-white absolute inset-0 z-[100]">
@@ -92,7 +94,7 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
                  {listing.listing_type === 'property' ? 'Asking Price' : 'Service Rate'}
               </p>
               <p className="text-3xl font-black text-sky-600 tracking-tight">
-                NLE {listing.price.toLocaleString()}
+                NLE {price.toLocaleString()}
                 {listing.rate_type === 'hourly' && <span className="text-lg font-bold text-sky-400"> / hr</span>}
               </p>
             </div>
@@ -138,7 +140,7 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
             <div className="p-5 flex items-start gap-4">
               <div className="relative shrink-0">
                 <div className="w-16 h-16 rounded-full bg-sky-100 border-2 border-white shadow-sm flex items-center justify-center text-2xl font-black text-sky-600">
-                  {listing.profiles?.full_name.charAt(0)}
+                  {listing.profiles?.full_name?.charAt(0) ?? '?'}
                 </div>
                 {listing.profiles?.is_verified && (
                   <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5">
@@ -149,11 +151,11 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
               
               <div className="flex-1">
                 <h4 className="font-bold text-lg text-slate-900 leading-tight mb-1">
-                  {listing.profiles?.full_name}
+                  {listing.profiles?.full_name ?? 'Unknown'}
                 </h4>
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
                   <span className="bg-slate-100 px-2 py-0.5 rounded-full text-slate-500">
-                    {listing.profiles?.role.replace('_', ' ')}
+                    {listing.profiles?.role?.replace('_', ' ') ?? 'Agent'}
                   </span>
                   <span>Joined 2026</span>
                 </div>

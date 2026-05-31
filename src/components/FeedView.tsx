@@ -146,6 +146,9 @@ function FilterCapsule({ label, isActive, onClick }: { label: string, isActive: 
 }
 
 export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void }) {
+  const price = typeof listing.price === 'string' ? parseFloat(listing.price) : listing.price;
+  const firstName = listing.profiles?.full_name?.split(' ')[0] ?? '?';
+  const initial = listing.profiles?.full_name?.charAt(0) ?? '?';
   return (
     <motion.div 
       layout
@@ -219,7 +222,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
               {listing.listing_type === 'property' ? 'Price' : 'Rate'}
             </span>
             <span className="text-sky-500 font-bold text-xl leading-none">
-              NLE {listing.price.toLocaleString()}
+              NLE {price.toLocaleString()}
               {listing.rate_type === 'hourly' && <span className="text-sm text-slate-500 font-normal"> / hr</span>}
             </span>
           </div>
@@ -232,14 +235,14 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
                 </p>
                 <div className="flex items-center justify-end gap-1">
                   <p className="text-xs font-semibold text-slate-700 max-w-[80px] truncate">
-                    {listing.profiles?.full_name.split(' ')[0]}
+                    {firstName}
                   </p>
                   {listing.profiles?.is_verified && <CheckCircle2 size={12} className="text-sky-500" />}
                 </div>
              </div>
              <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
                 <span className="font-bold text-slate-500 text-xs">
-                  {listing.profiles?.full_name.charAt(0)}
+                  {initial}
                 </span>
              </div>
           </div>
