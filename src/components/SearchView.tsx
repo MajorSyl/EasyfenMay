@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, SlidersHorizontal, MapPin } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, MapPin, User } from 'lucide-react';
 import { Listing } from '../types';
-import { ListingCard } from './FeedView';
+import { ListingCard, ServiceCard } from './FeedView';
 import { useAppContext } from '../App';
 import { AnimatePresence, motion } from 'motion/react';
-import { supabase } from '../lib/supabase';
+import { mockListings } from '../lib/dataStore';
 
 export default function SearchView() {
-  const { setSelectedListing, savedListingIds, toggleSaved } = useAppContext();
+  const { setSelectedListing, savedListingIds, toggleSaved, setCurrentView } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [budget, setBudget] = useState('');
   const [allListings, setAllListings] = useState<Listing[]>([]);
@@ -16,15 +16,9 @@ export default function SearchView() {
   
   useEffect(() => {
     const fetchListings = async () => {
-      const { data, error } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          profiles ( full_name, is_verified, phone_number )
-        `);
-      if (!error && data) {
-        setAllListings(data as any as Listing[]);
-      }
+      // Stream local data
+      await new Promise(r => setTimeout(r, 400));
+      setAllListings(mockListings);
     };
     fetchListings();
 
@@ -59,7 +53,16 @@ export default function SearchView() {
   return (
     <div className="flex flex-col h-full bg-slate-50">
       <div className="bg-white px-4 pt-12 md:pt-6 pb-6 shadow-sm z-20 sticky top-0">
-        <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800 mb-6">Discover</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800">Discover</h1>
+          <div 
+             className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity ml-auto active:scale-95"
+             onClick={() => setCurrentView('profile')}
+             title="View Profile"
+          >
+             <User size={20} className="text-sky-600" />
+          </div>
+        </div>
         
         {/* Deep Search Input Block */}
         <div className="space-y-4">
@@ -133,18 +136,31 @@ export default function SearchView() {
          </p>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-8">
             <AnimatePresence>
-              {results.map(listing => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing}
-                  onClick={() => setSelectedListing(listing)}
-                  isSaved={savedListingIds.has(listing.id)}
-                  onSave={(e) => {
-                    e.stopPropagation();
-                    toggleSaved(listing.id);
-                  }}
-                />
-              ))}
+              {results.map(listing => 
+                listing.listing_type === 'service' ? (
+                  <ServiceCard 
+                    key={listing.id} 
+                    listing={listing}
+                    onClick={() => setSelectedListing(listing)}
+                    isSaved={savedListingIds.has(listing.id)}
+                    onSave={(e) => {
+                      e.stopPropagation();
+                      toggleSaved(listing.id);
+                    }}
+                  />
+                ) : (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing}
+                    onClick={() => setSelectedListing(listing)}
+                    isSaved={savedListingIds.has(listing.id)}
+                    onSave={(e) => {
+                      e.stopPropagation();
+                      toggleSaved(listing.id);
+                    }}
+                  />
+                )
+              )}
             </AnimatePresence>
          </div>
       </div>

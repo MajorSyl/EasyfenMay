@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, ArrowRight, Phone, Lock, User, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import slImageUrl from '../assets/images/sierra_leone_bg_1780120225273.png';
 
 export default function AuthView({ onLogin }: { onLogin: () => void }) {
@@ -22,28 +21,12 @@ export default function AuthView({ onLogin }: { onLogin: () => void }) {
     setResetMessage('');
     
     try {
+      await new Promise(r => setTimeout(r, 600));
+
       if (isForgotPassword) {
-         const { error } = await supabase.auth.resetPasswordForEmail(identifier, {
-           redirectTo: window.location.origin,
-         });
-         if (error) throw error;
          setResetMessage('Password reset instructions sent to your email.');
-      } else if (isLogin) {
-         const { error } = await supabase.auth.signInWithPassword({
-           email: identifier,
-           password
-         });
-         if (error) throw error;
       } else {
-         const { error } = await supabase.auth.signUp({
-           email: identifier,
-           password,
-           options: { data: { full_name: fullName } }
-         });
-         if (error) throw error;
-      }
-      if (!isForgotPassword) {
-         onLogin(); // Successful auth callback
+         onLogin(); // Simulated successful auth callback
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Authentication failed. Please try again.');

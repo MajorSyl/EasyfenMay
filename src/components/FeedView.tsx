@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search } from 'lucide-react';
+import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search, User, Star, Briefcase, Handshake, Heart } from 'lucide-react';
 import { useAppContext } from '../App';
 import { Listing } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { supabase } from '../lib/supabase';
+import { mockListings } from '../lib/dataStore';
 
 export default function FeedView() {
   const { setSelectedListing, savedListingIds, toggleSaved, setCurrentView } = useAppContext();
-  const [activeFilter, setActiveFilter] = useState<'all' | 'rent' | 'buy' | 'land' | 'service'>('all');
+  const [mainTab, setMainTab] = useState<'property' | 'service'>('property');
+  const [propertyFilter, setPropertyFilter] = useState<'all' | 'rent' | 'buy' | 'land' | 'short_term'>('all');
+  const [serviceFilter, setServiceFilter] = useState<'all' | 'professional' | 'company'>('all');
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,22 +20,9 @@ export default function FeedView() {
   const fetchListings = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          profiles ( full_name, is_verified, phone_number )
-        `)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Not enough listings yet
-      if (!data || data.length === 0) {
-        setListings([]);
-      } else {
-        setListings(data as any as Listing[]);
-      }
+      // Stream data from local memory state
+      await new Promise(resolve => setTimeout(resolve, 600));
+      setListings(mockListings);
     } catch (error) {
       console.error(error);
       setListings([]);
@@ -42,21 +31,43 @@ export default function FeedView() {
     }
   };
 
-  // Filter listings based on the active tab
+  // Filter listings based on the active tabs
   const filteredListings = listings.filter(item => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'service') return item.listing_type === 'service';
-    if (activeFilter === 'rent') return item.category === 'rent';
-    if (activeFilter === 'buy') return item.category === 'buy';
-    if (activeFilter === 'land') return item.category === 'land';
-    return true;
+    if (mainTab === 'property') {
+      if (item.listing_type === 'service') return false;
+      if (propertyFilter === 'all') return true;
+      if (propertyFilter === 'rent') return item.category === 'rent';
+      if (propertyFilter === 'buy') return item.category === 'buy';
+      if (propertyFilter === 'land') return item.category === 'land';
+      if (propertyFilter === 'short_term') return item.category === 'short_term';
+      return true;
+    } else {
+      if (item.listing_type !== 'service') return false;
+      // In a real app we would check if the provider is a professional or company
+      // For now, let's just show all or mock it
+      if (serviceFilter === 'all') return true;
+      // mock filter based on full_name having 'Company' or 'LLC'
+      const isCompany = item.profiles?.full_name?.toLowerCase().includes('company') || item.profiles?.full_name?.toLowerCase().includes('llc');
+      if (serviceFilter === 'company') return isCompany;
+      if (serviceFilter === 'professional') return !isCompany;
+      return true;
+    }
   });
 
   return (
     <div className="flex flex-col h-full bg-slate-50">
       {/* Header Sticky Area */}
       <div className="bg-white px-4 pt-12 md:pt-6 pb-4 shadow-sm sticky top-0 z-10">
-        <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800 mb-4">Easyfen</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800">Easyfen</h1>
+          <div 
+             className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity ml-auto active:scale-95"
+             onClick={() => setCurrentView('profile')}
+             title="View Profile"
+          >
+             <User size={20} className="text-sky-600" />
+          </div>
+        </div>
         
         {/* Search Bar matching the Search view */}
         <div 
@@ -71,34 +82,75 @@ export default function FeedView() {
           </div>
         </div>
 
+        {/* Main Tabs: Properties vs Services */}
+        <div className="flex bg-slate-100 p-1 rounded-xl mb-4 max-w-sm">
+          <button
+            onClick={() => setMainTab('property')}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+              mainTab === 'property' ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Properties
+          </button>
+          <button
+            onClick={() => setMainTab('service')}
+            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+              mainTab === 'service' ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Services
+          </button>
+        </div>
+
         {/* Interactive Filter Capsules */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          <FilterCapsule 
-            label="All" 
-            isActive={activeFilter === 'all'} 
-            onClick={() => setActiveFilter('all')} 
-          />
-          <FilterCapsule 
-            label="For Rent" 
-            isActive={activeFilter === 'rent'} 
-            onClick={() => setActiveFilter('rent')} 
-          />
-          <FilterCapsule 
-            label="For Sale" 
-            isActive={activeFilter === 'buy'} 
-            onClick={() => setActiveFilter('buy')} 
-          />
-          <FilterCapsule 
-            label="Land" 
-            isActive={activeFilter === 'land'} 
-            onClick={() => setActiveFilter('land')} 
-          />
-          <div className="w-px bg-slate-200 mx-1"></div>
-          <FilterCapsule 
-            label="Services" 
-            isActive={activeFilter === 'service'} 
-            onClick={() => setActiveFilter('service')} 
-          />
+          {mainTab === 'property' ? (
+            <>
+              <FilterCapsule 
+                label="All Properties" 
+                isActive={propertyFilter === 'all'} 
+                onClick={() => setPropertyFilter('all')} 
+              />
+              <FilterCapsule 
+                label="For Rent" 
+                isActive={propertyFilter === 'rent'} 
+                onClick={() => setPropertyFilter('rent')} 
+              />
+              <FilterCapsule 
+                label="For Sale" 
+                isActive={propertyFilter === 'buy'} 
+                onClick={() => setPropertyFilter('buy')} 
+              />
+              <FilterCapsule 
+                label="Land" 
+                isActive={propertyFilter === 'land'} 
+                onClick={() => setPropertyFilter('land')} 
+              />
+              <FilterCapsule 
+                label="Daily/Hourly" 
+                isActive={propertyFilter === 'short_term'} 
+                onClick={() => setPropertyFilter('short_term')} 
+              />
+            </>
+          ) : (
+            <>
+              <FilterCapsule 
+                label="All Services" 
+                isActive={serviceFilter === 'all'} 
+                onClick={() => setServiceFilter('all')} 
+              />
+              <FilterCapsule 
+                label="Professionals" 
+                isActive={serviceFilter === 'professional'} 
+                onClick={() => setServiceFilter('professional')} 
+              />
+              <FilterCapsule 
+                label="Companies" 
+                isActive={serviceFilter === 'company'} 
+                onClick={() => setServiceFilter('company')} 
+              />
+            </>
+          )}
         </div>
       </div>
 
@@ -111,18 +163,31 @@ export default function FeedView() {
            </div>
         ) : (
           <AnimatePresence>
-            {filteredListings.map(listing => (
-              <ListingCard 
-                key={listing.id} 
-                listing={listing}
-                onClick={() => setSelectedListing(listing)}
-                isSaved={savedListingIds.has(listing.id)}
-                onSave={(e) => {
-                  e.stopPropagation();
-                  toggleSaved(listing.id);
-                }}
-              />
-            ))}
+            {filteredListings.map(listing => 
+              listing.listing_type === 'service' ? (
+                <ServiceCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onClick={() => setSelectedListing(listing)}
+                  isSaved={savedListingIds.has(listing.id)}
+                  onSave={(e) => {
+                    e.stopPropagation();
+                    toggleSaved(listing.id);
+                  }}
+                />
+              ) : (
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing}
+                  onClick={() => setSelectedListing(listing)}
+                  isSaved={savedListingIds.has(listing.id)}
+                  onSave={(e) => {
+                    e.stopPropagation();
+                    toggleSaved(listing.id);
+                  }}
+                />
+              )
+            )}
           </AnimatePresence>
         )}
       </div>
@@ -159,7 +224,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
       {/* Thumbnail Container */}
       <div className="relative aspect-[4/3] w-full bg-slate-200">
         <img 
-          src={listing.images[0] || 'https://via.placeholder.com/400x300'} 
+          src={listing.images?.[0] || 'https://via.placeholder.com/400x300'} 
           alt={listing.title} 
           className="w-full h-full object-cover"
         />
@@ -168,7 +233,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
         <div className="absolute top-3 left-3 flex gap-2">
           <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              {listing.category ? (listing.category === 'rent' ? 'Rent' : listing.category === 'buy' ? 'Sale' : listing.category) : listing.listing_type}
+              {listing.category ? (listing.category === 'rent' ? 'Rent' : listing.category === 'buy' ? 'Sale' : listing.category === 'short_term' ? 'Hourly' : listing.category) : listing.listing_type}
             </span>
           </div>
           {listing.is_premium && (
@@ -197,7 +262,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
         {/* Photo Count Overlay */}
         <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
           <Camera size={12} />
-          {listing.images.length}
+          {listing.images?.length || 0}
         </div>
       </div>
 
@@ -219,8 +284,9 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
               {listing.listing_type === 'property' ? 'Price' : 'Rate'}
             </span>
             <span className="text-sky-500 font-bold text-xl leading-none">
-              NLE {listing.price.toLocaleString()}
+              NLE {listing.price?.toLocaleString() || '0'}
               {listing.rate_type === 'hourly' && <span className="text-sm text-slate-500 font-normal"> / hr</span>}
+              {listing.rate_type === 'daily' && <span className="text-sm text-slate-500 font-normal"> / day</span>}
             </span>
           </div>
           
@@ -232,14 +298,14 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
                 </p>
                 <div className="flex items-center justify-end gap-1">
                   <p className="text-xs font-semibold text-slate-700 max-w-[80px] truncate">
-                    {listing.profiles?.full_name.split(' ')[0]}
+                    {listing.profiles?.full_name?.split(' ')[0] || 'User'}
                   </p>
                   {listing.profiles?.is_verified && <CheckCircle2 size={12} className="text-sky-500" />}
                 </div>
              </div>
              <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
                 <span className="font-bold text-slate-500 text-xs">
-                  {listing.profiles?.full_name.charAt(0)}
+                  {listing.profiles?.full_name?.charAt(0) || '?'}
                 </span>
              </div>
           </div>
@@ -248,3 +314,90 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
     </motion.div>
   );
 }
+
+export function ServiceCard({ listing, onClick, isSaved, onSave }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void }) {
+  return (
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+      onClick={onClick}
+      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-slate-200 transition-all"
+    >
+      {/* Top Banner & Profile Avatar */}
+      <div className="relative pt-8 px-6 pb-2 bg-gradient-to-b from-sky-50 to-white flex flex-col items-center justify-center">
+        {/* Banner/Backdrop Color blocks */}
+        <div className="absolute top-0 left-0 right-0 h-20 bg-sky-100/50 rounded-t-2xl border-b border-sky-100/50"></div>
+        
+        {/* Save Button */}
+        <button 
+          onClick={onSave}
+          className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform z-10"
+        >
+          <Heart size={16} className={`transition-colors text-slate-400 ${isSaved ? 'fill-rose-500 !text-rose-500' : ''}`} />
+        </button>
+
+        {/* Profile Image */}
+        <div className="relative w-24 h-24 rounded-full border-4 border-white shadow-md bg-slate-100 overflow-hidden z-20 flex items-center justify-center mt-2">
+          {listing.images && listing.images.length > 0 ? (
+            <img src={listing.images[0]} alt={listing.title} className="w-full h-full object-cover" />
+          ) : (
+            <User size={32} className="text-slate-400" />
+          )}
+        </div>
+        {listing.profiles?.is_verified && (
+          <div className="absolute bottom-[0.5rem] translate-x-8 z-30 bg-white rounded-full p-0.5 shadow-sm">
+            <BadgeCheck size={20} className="text-sky-500 fill-white" />
+          </div>
+        )}
+      </div>
+
+      <div className="px-6 pb-6 pt-2 text-center flex-1 flex flex-col">
+        {/* Professional Details */}
+        <h3 className="font-bold text-slate-800 text-lg mb-1 line-clamp-1">
+          {listing.profiles?.full_name || 'Professional'}
+        </h3>
+        <p className="text-sky-600 font-medium text-sm flex items-center justify-center gap-1.5 mb-3">
+          <Briefcase size={14} />
+          <span className="truncate">{listing.title}</span>
+        </p>
+
+        <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 mb-4">
+          <div className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-md">
+            <Star size={12} className="fill-amber-500 text-amber-500" />
+            <span className="font-bold font-mono">4.9</span>
+            <span className="opacity-70">(24)</span>
+          </div>
+          <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-md text-slate-600">
+            <MapPin size={12} className="text-slate-400" />
+            <span className="truncate max-w-[80px]">{listing.location_name?.split(',')[0]}</span>
+          </div>
+        </div>
+
+        {/* Description line clamp */}
+        <p className="text-sm text-slate-500 line-clamp-2 mb-6">
+           {listing.description}
+        </p>
+
+        {/* Footer Area (Price & Action) */}
+        <div className="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex flex-col text-left">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Rate</span>
+            <span className="text-slate-800 font-bold text-lg leading-none">
+              NLE {listing.price?.toLocaleString() || '0'}
+              {listing.rate_type === 'hourly' && <span className="text-xs text-slate-500 font-medium">/hr</span>}
+              {listing.rate_type === 'daily' && <span className="text-xs text-slate-500 font-medium">/day</span>}
+            </span>
+          </div>
+          <button className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5 active:scale-95">
+            <Handshake size={16} />
+            Hire
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+

@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { Home, Search, PlusSquare, Heart, User } from 'lucide-react';
+import { Home, Search, PlusSquare, Heart, User, MessageSquare } from 'lucide-react';
 import FeedView from './components/FeedView';
 import SearchView from './components/SearchView';
 import AddListingForm from './components/AddListingForm';
@@ -8,8 +8,9 @@ import ProfileView from './components/ProfileView';
 import ListingDetailView from './components/ListingDetailView';
 import UpgradeToPremium from './components/UpgradeToPremium';
 import AuthView from './components/AuthView';
+import MessagesView from './components/MessagesView';
+import AdminDashboardPage from './pages/admin/index';
 import { Listing, ViewState } from './types';
-import { supabase } from './lib/supabase';
 
 interface AppContextType {
   currentView: ViewState;
@@ -87,18 +88,21 @@ export default function App() {
       case 'add': return <AddListingForm />;
       case 'saved': return <SavedView />;
       case 'profile': return <ProfileView />;
+      case 'messages': return <MessagesView />;
       default: return <FeedView />;
     }
   };
 
   return (
     <AppContext.Provider value={contextValue}>
-      {/* Responsive workspace boundary */}
-      <div className="w-full min-h-screen bg-slate-50 md:bg-slate-100 flex justify-center">
-        <div className="w-full max-w-7xl mx-auto min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row">
-          
-          {/* Side Navigation Panel (Desktop) */}
-          {(!selectedListing && !showUpgrade && isAuthenticated) && (
+      {currentView === 'admin' ? (
+        <AdminDashboardPage />
+      ) : (
+        <div className="w-full min-h-screen bg-slate-50 md:bg-slate-100 flex justify-center">
+          <div className="w-full max-w-7xl mx-auto min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col md:flex-row">
+            
+            {/* Side Navigation Panel (Desktop) */}
+            {(!selectedListing && !showUpgrade && isAuthenticated) && (
             <aside className="hidden md:flex flex-col w-64 border-r border-slate-100 bg-white z-50 py-8 px-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
               <div className="mb-10 pl-2">
                 <h1 className="text-2xl font-bold tracking-tight text-slate-800">Easyfen</h1>
@@ -115,6 +119,12 @@ export default function App() {
                   label="Search" 
                   isActive={currentView === 'search'} 
                   onClick={() => setCurrentView('search')} 
+                />
+                <DesktopNavItem 
+                  icon={<MessageSquare size={22} />} 
+                  label="Messages" 
+                  isActive={currentView === 'messages'} 
+                  onClick={() => setCurrentView('messages')} 
                 />
                 <DesktopNavItem 
                   icon={<PlusSquare size={22} />} 
@@ -160,6 +170,12 @@ export default function App() {
                   onClick={() => setCurrentView('search')} 
                 />
                 <MobileNavItem 
+                  icon={<MessageSquare size={24} />} 
+                  label="Messages" 
+                  isActive={currentView === 'messages'} 
+                  onClick={() => setCurrentView('messages')} 
+                />
+                <MobileNavItem 
                   icon={<PlusSquare size={24} />} 
                   label="Add" 
                   isActive={currentView === 'add'} 
@@ -182,6 +198,7 @@ export default function App() {
           )}
         </div>
       </div>
+      )}
     </AppContext.Provider>
   );
 }

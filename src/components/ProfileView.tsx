@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CheckCircle2, TrendingUp, Loader2 } from 'lucide-react';
+import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CheckCircle2, TrendingUp, Loader2, User, ChevronRight, Bell, Shield, LayoutDashboard } from 'lucide-react';
 import { Profile, Listing } from '../types';
 import { useAppContext } from '../App';
 import { ListingCard } from './FeedView';
-import { supabase } from '../lib/supabase';
+import { mockProfile, mockListings } from '../lib/dataStore';
 
 export default function ProfileView() {
-  const { setShowUpgrade, setSelectedListing, savedListingIds, toggleSaved, setIsAuthenticated } = useAppContext();
+  const { setShowUpgrade, setSelectedListing, savedListingIds, toggleSaved, setIsAuthenticated, setCurrentView } = useAppContext();
   const [activeTab, setActiveTab] = useState<'active' | 'sold'>('active');
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [userListings, setUserListings] = useState<Listing[]>([]);
@@ -16,27 +16,9 @@ export default function ProfileView() {
     const fetchProfileAndListings = async () => {
       setIsLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
-
-        const [profileRes, listingsRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', user.id).single(),
-          supabase.from('listings').select(`
-            *,
-            profiles ( full_name, is_verified, phone_number )
-          `).eq('user_id', user.id).order('created_at', { ascending: false })
-        ]);
-
-        if (profileRes.data) {
-          setUserProfile(profileRes.data as unknown as Profile);
-        }
-        
-        if (listingsRes.data) {
-          setUserListings(listingsRes.data as any as Listing[]);
-        }
+        await new Promise(r => setTimeout(r, 400));
+        setUserProfile(mockProfile);
+        setUserListings(mockListings);
       } catch (error) {
         console.error('Error fetching profile data', error);
       } finally {
@@ -64,10 +46,12 @@ export default function ProfileView() {
       <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-slate-50">
         <p className="text-slate-500 mb-4 font-medium">Could not load profile data.</p>
         <button 
-          onClick={() => supabase.auth.signOut()}
+          onClick={() => {
+            setIsAuthenticated(false);
+          }}
           className="bg-slate-200 px-4 py-2 rounded-xl text-slate-700 font-bold text-sm"
         >
-          Sign Out & Return to Login
+          Return to Login
         </button>
       </div>
     );
@@ -107,7 +91,7 @@ export default function ProfileView() {
                </div>
                <button 
                  onClick={async () => {
-                   await supabase.auth.signOut();
+                   setIsAuthenticated(false);
                  }}
                  className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-rose-400 hover:bg-slate-700 transition-colors"
                  title="Log Out"
@@ -155,8 +139,74 @@ export default function ProfileView() {
         </div>
       </div>
 
-      {/* Workspace Area - My Listings */}
-      <div className="px-4 py-6 flex-1">
+      {/* Workspace Area - My Listings & Settings */}
+      <div className="px-4 py-6 flex-1 max-w-3xl mx-auto w-full">
+        {/* Settings Section */}
+        <div className="mb-8 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Settings size={20} className="text-slate-400" />
+                Account Settings
+             </h2>
+          </div>
+          <div className="p-2">
+             <button 
+                onClick={() => setCurrentView('admin')}
+                className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center text-sky-600">
+                      <LayoutDashboard size={18} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">Advanced Host Dashboard</p>
+                      <p className="text-xs text-slate-500">Full screen management console</p>
+                   </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+             </button>
+             
+             <button className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                      <User size={18} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">Personal Information</p>
+                      <p className="text-xs text-slate-500">Update your name, phone, and role</p>
+                   </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+             </button>
+             
+             <button className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                      <Bell size={18} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">Notifications</p>
+                      <p className="text-xs text-slate-500">Manage email and push alerts</p>
+                   </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+             </button>
+             
+             <button className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                      <Shield size={18} />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">Security & Privacy</p>
+                      <p className="text-xs text-slate-500">Password and verification state</p>
+                   </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+             </button>
+          </div>
+        </div>
+
         <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
           <Activity size={20} className="text-slate-400" />
           My Operations
@@ -183,24 +233,33 @@ export default function ProfileView() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
-           {displayListings.map(listing => (
-             <ListingCard 
-                key={listing.id} 
-                listing={listing} 
-                onClick={() => setSelectedListing(listing)}
-                isSaved={savedListingIds.has(listing.id)}
-                onSave={(e) => {
-                  e.stopPropagation();
-                  toggleSaved(listing.id);
-                }}
-             />
-           ))}
+           {displayListings.length === 0 ? (
+             <div className="col-span-full py-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-100 border-dashed">
+               <FileText className="mx-auto mb-3 opacity-20" size={48} />
+               <p className="font-medium text-sm">No listings found in this category.</p>
+             </div>
+           ) : (
+             displayListings.map(listing => (
+               <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  onClick={() => setSelectedListing(listing)}
+                  isSaved={savedListingIds.has(listing.id)}
+                  onSave={(e) => {
+                    e.stopPropagation();
+                    toggleSaved(listing.id);
+                  }}
+               />
+             ))
+           )}
         </div>
 
         {/* Danger Zone */}
-        <div className="mt-8 pt-6 border-t border-slate-200">
-           <h3 className="text-sm font-bold text-slate-800 mb-2 uppercase tracking-wider text-rose-600">Danger Zone</h3>
-           <p className="text-xs text-slate-500 mb-4">Permanently remove your account and all associated data. This action is irreversible.</p>
+        <div className="mt-4 pt-6 border-t border-slate-200">
+           <h3 className="text-sm font-bold text-slate-800 mb-2 uppercase tracking-wider text-rose-600 flex items-center gap-2">
+              <LogOut size={16} /> Danger Zone
+           </h3>
+           <p className="text-xs text-slate-500 mb-4">Permanently remove your account and all associated data. This action is irreversible and requires confirmation.</p>
            <button 
              onClick={() => {
                if (window.confirm("Are you absolutely sure you want to delete your account? All data will be lost.")) {
@@ -209,7 +268,7 @@ export default function ProfileView() {
              }}
              className="w-full sm:w-auto px-6 py-2.5 bg-rose-50 text-rose-600 font-bold text-sm rounded-xl hover:bg-rose-100 transition-colors border border-rose-200"
            >
-             Delete Account
+             Delete Account Permanently
            </button>
         </div>
       </div>

@@ -44,7 +44,7 @@ export interface Listing {
 }
 
 // Global state context for our simple router
-export type ViewState = 'home' | 'search' | 'add' | 'saved' | 'profile';
+export type ViewState = 'home' | 'search' | 'add' | 'saved' | 'profile' | 'messages' | 'dashboard' | 'admin';
 
 interface AppState {
   currentView: ViewState;
