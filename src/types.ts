@@ -45,8 +45,41 @@ export interface Listing {
   profiles?: Profile;
 }
 
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+}
+
+export interface Conversation {
+  id: string;
+  listing_id: string;
+  buyer_id: string;
+  agent_id: string;
+  last_message_at: string;
+  created_at: string;
+  // Joins
+  listing?: Pick<Listing, 'id' | 'title' | 'images' | 'price' | 'location_name'>;
+  buyer?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>;
+  agent?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>;
+  last_message?: string;
+}
+
+export interface Rating {
+  id: string;
+  listing_id: string;
+  rater_id: string;
+  rated_user_id: string;
+  stars: number;
+  comment: string;
+  created_at: string;
+  rater?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>;
+}
+
 // Global state context for our simple router
-export type ViewState = 'home' | 'search' | 'add' | 'saved' | 'profile';
+export type ViewState = 'home' | 'search' | 'add' | 'saved' | 'profile' | 'messages';
 
 interface AppState {
   currentView: ViewState;

@@ -22,7 +22,7 @@ export default function FeedView() {
         .from('listings')
         .select(`
           *,
-          profiles!listings_user_id_fkey ( full_name, is_verified, phone_number )
+          profiles!listings_user_id_fkey ( full_name, is_verified, phone_number, avatar_url )
         `)
         .order('created_at', { ascending: false });
         
@@ -241,9 +241,9 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
                 </div>
              </div>
              <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-                <span className="font-bold text-slate-500 text-xs">
-                  {initial}
-                </span>
+                {listing.profiles?.avatar_url
+                  ? <img src={listing.profiles.avatar_url} className="w-full h-full object-cover" alt="" />
+                  : <span className="font-bold text-slate-500 text-xs">{initial}</span>}
              </div>
           </div>
         </div>
