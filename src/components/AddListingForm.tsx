@@ -1,16 +1,13 @@
 import React, { useState, useRef } from 'react';
-import { CloudUpload as UploadCloud, X, MapPin, Building, Wrench, CircleDollarSign, CircleCheck as CheckCircle2 } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, X, MapPin, Building, Wrench, CircleDollarSign } from 'lucide-react';
 import { ListingType } from '../types';
 import { supabase } from '../lib/supabase';
-import { useAppContext } from '../App';
 
 export default function AddListingForm() {
-  const { setCurrentView } = useAppContext();
   const [listingType, setListingType] = useState<ListingType>('property');
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
 
   // Form states
   const [title, setTitle] = useState('');
@@ -79,6 +76,9 @@ export default function AddListingForm() {
 
       if (insertError) throw insertError;
 
+      alert('Listing created successfully!');
+      
+      // Reset form
       setImages([]);
       setTitle('');
       setPrice('');
@@ -86,12 +86,9 @@ export default function AddListingForm() {
       setLocation('');
       setBedrooms('');
       setServiceType('');
-      setSuccessMsg('Listing published! Redirecting...');
-      setTimeout(() => setCurrentView('home'), 1500);
       
     } catch (error: any) {
       console.error(error);
-      setSuccessMsg('');
       alert(error.message || 'An error occurred while creating the listing.');
     } finally {
       setIsUploading(false);
@@ -105,13 +102,6 @@ export default function AddListingForm() {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create Listing</h1>
           <p className="text-sm font-semibold text-slate-500 mt-1">Get your property or service in front of thousands.</p>
         </div>
-
-        {successMsg && (
-          <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 text-emerald-700 px-4 py-3 rounded-2xl mb-6 font-semibold text-sm">
-            <CheckCircle2 size={18} className="shrink-0" />
-            {successMsg}
-          </div>
-        )}
 
       {/* Segmented Controller */}
       <div className="flex p-1.5 bg-slate-200/60 rounded-2xl mb-8 shadow-inner">

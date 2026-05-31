@@ -25,7 +25,7 @@ export default function SavedView() {
         .from('listings')
         .select(`
           *,
-          profiles!listings_user_id_fkey ( full_name, is_verified, phone_number )
+          profiles ( full_name, is_verified, phone_number )
         `)
         .in('id', ids);
         
