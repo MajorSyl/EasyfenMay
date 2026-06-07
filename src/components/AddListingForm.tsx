@@ -65,9 +65,9 @@ export default function AddListingForm() {
         </div>
 
       {/* Segmented Controller */}
-      <div className="flex p-1.5 bg-slate-200/60 rounded-2xl mb-8 shadow-inner">
+      <div className="flex p-1.5 bg-slate-200/60 rounded-2xl mb-8 shadow-inner overflow-x-auto no-scrollbar">
         <button
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all ${
+          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all ${
             listingType === 'property' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-500'
           }`}
           onClick={() => setListingType('property')}
@@ -75,7 +75,15 @@ export default function AddListingForm() {
           <Building size={18} /> Property
         </button>
         <button
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all ${
+          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all ${
+            listingType === 'hotel' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-500'
+          }`}
+          onClick={() => setListingType('hotel')}
+        >
+          <Building size={18} /> Hotel
+        </button>
+        <button
+          className={`flex-1 min-w-[100px] flex items-center justify-center gap-2 py-3.5 text-sm font-bold rounded-xl transition-all ${
             listingType === 'service' ? 'bg-white text-sky-600 shadow-sm' : 'text-slate-500'
           }`}
           onClick={() => setListingType('service')}
@@ -148,7 +156,9 @@ export default function AddListingForm() {
 
              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Price (NLE)</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                    {listingType === 'hotel' ? 'Daily Rate (NLE)' : 'Price (NLE)'}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                        <CircleDollarSign size={16} />
@@ -206,6 +216,18 @@ export default function AddListingForm() {
                       className="w-full bg-slate-50 border-none rounded-xl px-4 py-3.5 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 placeholder:text-slate-400 placeholder:font-medium"
                     />
                  </div>
+              </div>
+            ) : listingType === 'hotel' ? (
+              <div className="pt-2">
+                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Room Type</label>
+                 <select 
+                   value={category}
+                   onChange={e => setCategory(e.target.value)}
+                   className="w-full bg-slate-50 border-none rounded-xl px-4 py-3.5 text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500/20 appearance-none"
+                 >
+                   <option value="room">Standard Room</option>
+                   <option value="suite">Suite</option>
+                 </select>
               </div>
             ) : (
               <div className="pt-2">

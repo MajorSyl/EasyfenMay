@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search, User, Star, Briefcase, Handshake, Heart } from 'lucide-react';
+import { Camera, MapPin, Eye, BadgeCheck, CheckCircle2, Search, User, Star, Briefcase, Handshake, Heart, MessageSquare, Edit2, Trash2 } from 'lucide-react';
 import { useAppContext } from '../App';
 import { Listing } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -7,9 +7,10 @@ import { mockListings } from '../lib/dataStore';
 
 export default function FeedView() {
   const { setSelectedListing, savedListingIds, toggleSaved, setCurrentView } = useAppContext();
-  const [mainTab, setMainTab] = useState<'property' | 'service'>('property');
+  const [mainTab, setMainTab] = useState<'property' | 'service' | 'hotel'>('property');
   const [propertyFilter, setPropertyFilter] = useState<'all' | 'rent' | 'buy' | 'land' | 'short_term'>('all');
   const [serviceFilter, setServiceFilter] = useState<'all' | 'professional' | 'company'>('all');
+  const [hotelFilter, setHotelFilter] = useState<'all' | 'rooms' | 'suites'>('all');
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -34,14 +35,14 @@ export default function FeedView() {
   // Filter listings based on the active tabs
   const filteredListings = listings.filter(item => {
     if (mainTab === 'property') {
-      if (item.listing_type === 'service') return false;
+      if (item.listing_type !== 'property') return false;
       if (propertyFilter === 'all') return true;
       if (propertyFilter === 'rent') return item.category === 'rent';
       if (propertyFilter === 'buy') return item.category === 'buy';
       if (propertyFilter === 'land') return item.category === 'land';
       if (propertyFilter === 'short_term') return item.category === 'short_term';
       return true;
-    } else {
+    } else if (mainTab === 'service') {
       if (item.listing_type !== 'service') return false;
       // In a real app we would check if the provider is a professional or company
       // For now, let's just show all or mock it
@@ -50,6 +51,12 @@ export default function FeedView() {
       const isCompany = item.profiles?.full_name?.toLowerCase().includes('company') || item.profiles?.full_name?.toLowerCase().includes('llc');
       if (serviceFilter === 'company') return isCompany;
       if (serviceFilter === 'professional') return !isCompany;
+      return true;
+    } else {
+      if (item.listing_type !== 'hotel') return false;
+      if (hotelFilter === 'all') return true;
+      if (hotelFilter === 'rooms') return !item.room_type?.toLowerCase().includes('suite');
+      if (hotelFilter === 'suites') return item.room_type?.toLowerCase().includes('suite');
       return true;
     }
   });
@@ -60,12 +67,22 @@ export default function FeedView() {
       <div className="bg-white px-4 pt-12 md:pt-6 pb-4 shadow-sm sticky top-0 z-10">
         <div className="flex justify-between items-center mb-4">
           <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800">Easyfen</h1>
-          <div 
-             className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity ml-auto active:scale-95"
-             onClick={() => setCurrentView('profile')}
-             title="View Profile"
-          >
-             <User size={20} className="text-sky-600" />
+          <div className="flex items-center gap-3 ml-auto">
+             <div 
+                className="relative w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:bg-slate-200 transition-colors active:scale-95"
+                onClick={() => setCurrentView('messages')}
+                title="Messages"
+             >
+                <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white z-10"></div>
+                <MessageSquare size={18} className="text-slate-600" />
+             </div>
+             <div 
+                className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity active:scale-95"
+                onClick={() => setCurrentView('profile')}
+                title="View Profile"
+             >
+                <User size={20} className="text-sky-600" />
+             </div>
           </div>
         </div>
         
@@ -82,19 +99,27 @@ export default function FeedView() {
           </div>
         </div>
 
-        {/* Main Tabs: Properties vs Services */}
+        {/* Main Tabs: Properties vs Hotels vs Services */}
         <div className="flex bg-slate-100 p-1 rounded-xl mb-4 max-w-sm">
           <button
             onClick={() => setMainTab('property')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 py-1.5 md:py-2 rounded-lg text-sm font-semibold transition-all ${
               mainTab === 'property' ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
             Properties
           </button>
           <button
+            onClick={() => setMainTab('hotel')}
+            className={`flex-1 py-1.5 md:py-2 rounded-lg text-sm font-semibold transition-all ${
+              mainTab === 'hotel' ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Hotels
+          </button>
+          <button
             onClick={() => setMainTab('service')}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+            className={`flex-1 py-1.5 md:py-2 rounded-lg text-sm font-semibold transition-all ${
               mainTab === 'service' ? 'bg-white text-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)]' : 'text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -132,7 +157,7 @@ export default function FeedView() {
                 onClick={() => setPropertyFilter('short_term')} 
               />
             </>
-          ) : (
+          ) : mainTab === 'service' ? (
             <>
               <FilterCapsule 
                 label="All Services" 
@@ -148,6 +173,24 @@ export default function FeedView() {
                 label="Companies" 
                 isActive={serviceFilter === 'company'} 
                 onClick={() => setServiceFilter('company')} 
+              />
+            </>
+          ) : (
+            <>
+              <FilterCapsule 
+                label="All Hotels" 
+                isActive={hotelFilter === 'all'} 
+                onClick={() => setHotelFilter('all')} 
+              />
+              <FilterCapsule 
+                label="Rooms" 
+                isActive={hotelFilter === 'rooms'} 
+                onClick={() => setHotelFilter('rooms')} 
+              />
+              <FilterCapsule 
+                label="Suites" 
+                isActive={hotelFilter === 'suites'} 
+                onClick={() => setHotelFilter('suites')} 
               />
             </>
           )}
@@ -210,7 +253,7 @@ function FilterCapsule({ label, isActive, onClick }: { label: string, isActive: 
   );
 }
 
-export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void }) {
+export function ListingCard({ listing, onClick, isSaved, onSave, onEdit, onDelete }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void, onEdit?: (e: React.MouseEvent) => void, onDelete?: (e: React.MouseEvent) => void }) {
   return (
     <motion.div 
       layout
@@ -233,7 +276,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
         <div className="absolute top-3 left-3 flex gap-2">
           <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm flex items-center gap-1">
             <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              {listing.category ? (listing.category === 'rent' ? 'Rent' : listing.category === 'buy' ? 'Sale' : listing.category === 'short_term' ? 'Hourly' : listing.category) : listing.listing_type}
+              {listing.listing_type === 'hotel' ? 'Hotel' : listing.category ? (listing.category === 'rent' ? 'Rent' : listing.category === 'buy' ? 'Sale' : listing.category === 'short_term' ? 'Hourly' : listing.category) : listing.listing_type}
             </span>
           </div>
           {listing.is_premium && (
@@ -243,15 +286,35 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
           )}
         </div>
         
-        {/* Save Button Overlay */}
-        <button 
-          onClick={onSave}
-          className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform"
-        >
-          <svg className={`w-5 h-5 transition-colors ${isSaved ? 'fill-sky-500 text-sky-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-        </button>
+        {/* Actions Overlay */}
+        <div className="absolute top-3 right-3 flex gap-2">
+          {onEdit && (
+            <button 
+              onClick={onEdit}
+              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform text-slate-700 hover:text-sky-500"
+            >
+              <Edit2 size={18} />
+            </button>
+          )}
+          {onDelete && (
+            <button 
+              onClick={onDelete}
+              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform text-slate-700 hover:text-rose-500"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
+          {!onEdit && !onDelete && onSave && (
+            <button 
+              onClick={onSave}
+              className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            >
+              <svg className={`w-5 h-5 transition-colors ${isSaved ? 'fill-sky-500 text-sky-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+          )}
+        </div>
 
         {/* View Count Overlay */}
         <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
@@ -294,7 +357,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
           <div className="flex items-center gap-2">
              <div className="text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  {listing.listing_type === 'property' ? 'Agent' : 'Provider'}
+                  {listing.listing_type === 'property' ? 'Agent' : listing.listing_type === 'hotel' ? 'Hotel' : 'Provider'}
                 </p>
                 <div className="flex items-center justify-end gap-1">
                   <p className="text-xs font-semibold text-slate-700 max-w-[80px] truncate">
@@ -315,7 +378,7 @@ export function ListingCard({ listing, onClick, isSaved, onSave }: { key?: React
   );
 }
 
-export function ServiceCard({ listing, onClick, isSaved, onSave }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void }) {
+export function ServiceCard({ listing, onClick, isSaved, onSave, onEdit, onDelete }: { key?: React.Key, listing: Listing, onClick: () => void, isSaved: boolean, onSave: (e: React.MouseEvent) => void, onEdit?: (e: React.MouseEvent) => void, onDelete?: (e: React.MouseEvent) => void }) {
   return (
     <motion.div 
       layout
@@ -331,13 +394,33 @@ export function ServiceCard({ listing, onClick, isSaved, onSave }: { key?: React
         {/* Banner/Backdrop Color blocks */}
         <div className="absolute top-0 left-0 right-0 h-20 bg-sky-100/50 rounded-t-2xl border-b border-sky-100/50"></div>
         
-        {/* Save Button */}
-        <button 
-          onClick={onSave}
-          className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform z-10"
-        >
-          <Heart size={16} className={`transition-colors text-slate-400 ${isSaved ? 'fill-rose-500 !text-rose-500' : ''}`} />
-        </button>
+        {/* Actions Overlay */}
+        <div className="absolute top-3 right-3 flex gap-2 z-10">
+          {onEdit && (
+            <button 
+              onClick={onEdit}
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform text-slate-700 hover:text-sky-500"
+            >
+              <Edit2 size={14} />
+            </button>
+          )}
+          {onDelete && (
+            <button 
+              onClick={onDelete}
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform text-slate-700 hover:text-rose-500"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+          {!onEdit && !onDelete && onSave && (
+            <button 
+              onClick={onSave}
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            >
+              <Heart size={16} className={`transition-colors text-slate-400 ${isSaved ? 'fill-rose-500 !text-rose-500' : ''}`} />
+            </button>
+          )}
+        </div>
 
         {/* Profile Image */}
         <div className="relative w-24 h-24 rounded-full border-4 border-white shadow-md bg-slate-100 overflow-hidden z-20 flex items-center justify-center mt-2">

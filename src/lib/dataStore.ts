@@ -84,6 +84,26 @@ export const mockListings: Listing[] = [
     bathrooms: 1,
     rate_type: 'hourly',
     profiles: mockProfile
+  },
+  {
+    id: '5',
+    user_id: '123-abc',
+    listing_type: 'hotel',
+    title: 'The Atlantic View Hotel',
+    description: 'Luxury hotel rooms with an ocean view in the heart of the city.',
+    price: 150,
+    location_name: 'Aberdeen Setters',
+    images: ['https://images.unsplash.com/photo-1566073771259-6a8506099945?fit=crop&w=800'],
+    is_premium: true,
+    views_count: 850,
+    inquiries_count: 32,
+    status: 'active',
+    created_at: new Date().toISOString(),
+    amenities: ['Pool', 'WiFi', 'Breakfast', 'Gym'],
+    room_type: 'Deluxe Suite',
+    hotel_rating: 5,
+    rate_type: 'daily',
+    profiles: { ...mockProfile, full_name: 'Atlantic Hotel Group' }
   }
 ];
 

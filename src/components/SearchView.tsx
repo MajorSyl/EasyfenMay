@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, SlidersHorizontal, MapPin, User } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, MapPin, User, MessageSquare } from 'lucide-react';
 import { Listing } from '../types';
 import { ListingCard, ServiceCard } from './FeedView';
 import { useAppContext } from '../App';
@@ -55,12 +55,22 @@ export default function SearchView() {
       <div className="bg-white px-4 pt-12 md:pt-6 pb-6 shadow-sm z-20 sticky top-0">
         <div className="flex justify-between items-center mb-6">
           <h1 className="md:hidden text-2xl font-bold tracking-tight text-slate-800">Discover</h1>
-          <div 
-             className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity ml-auto active:scale-95"
-             onClick={() => setCurrentView('profile')}
-             title="View Profile"
-          >
-             <User size={20} className="text-sky-600" />
+          <div className="flex items-center gap-3 ml-auto">
+             <div 
+                className="relative w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:bg-slate-200 transition-colors active:scale-95"
+                onClick={() => setCurrentView('messages')}
+                title="Messages"
+             >
+                <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white z-10"></div>
+                <MessageSquare size={18} className="text-slate-600" />
+             </div>
+             <div 
+                className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center cursor-pointer border-2 border-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] hover:opacity-80 transition-opacity active:scale-95"
+                onClick={() => setCurrentView('profile')}
+                title="View Profile"
+             >
+                <User size={20} className="text-sky-600" />
+             </div>
           </div>
         </div>
         
@@ -72,7 +82,7 @@ export default function SearchView() {
             </div>
             <input
               type="text"
-              placeholder="Search Goderich, Plumbers, Lands..."
+              placeholder="Search Goderich, Plumbers, Hotels..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}

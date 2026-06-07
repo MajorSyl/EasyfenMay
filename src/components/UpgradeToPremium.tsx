@@ -19,17 +19,41 @@ export default function UpgradeToPremium() {
     }
   };
 
-  const handleSimulatedPayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     
-    console.log(`[Payment Intent] Provider: ${paymentMethod}, Plan: ${selectedPlan}, Amount: ${getPrice()} NLE`);
-    
-    setTimeout(() => {
+    try {
+      const endpoint = paymentMethod === 'orange' ? '/api/payment/orange' 
+                     : paymentMethod === 'afrimoney' ? '/api/payment/afrimoney' 
+                     : '/api/payment/card';
+      
+      const payload = {
+        amount: getPrice(),
+        plan: selectedPlan,
+        ...(paymentMethod !== 'card' && { phone_number: phoneNumber })
+      };
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('Payment Success! Your account/listing has been upgraded. Transaction ID: ' + data.transaction_id);
+        setShowUpgrade(false);
+      } else {
+        alert('Payment Failed: ' + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during payment processing.');
+    } finally {
       setIsProcessing(false);
-      alert('Payment Success! Your account/listing has been upgraded.');
-      setShowUpgrade(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -153,7 +177,7 @@ export default function UpgradeToPremium() {
         </div>
 
         {/* Payment Details Form */}
-        <form onSubmit={handleSimulatedPayment} className="space-y-4">
+        <form onSubmit={handlePayment} className="space-y-4">
           <AnimatePresence mode="wait">
             {paymentMethod !== 'card' ? (
               <motion.div 

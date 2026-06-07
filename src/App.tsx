@@ -121,22 +121,10 @@ export default function App() {
                   onClick={() => setCurrentView('search')} 
                 />
                 <DesktopNavItem 
-                  icon={<MessageSquare size={22} />} 
-                  label="Messages" 
-                  isActive={currentView === 'messages'} 
-                  onClick={() => setCurrentView('messages')} 
-                />
-                <DesktopNavItem 
                   icon={<PlusSquare size={22} />} 
                   label="Add Listing" 
                   isActive={currentView === 'add'} 
                   onClick={() => setCurrentView('add')} 
-                />
-                <DesktopNavItem 
-                  icon={<Heart size={22} />} 
-                  label="Saved" 
-                  isActive={currentView === 'saved'} 
-                  onClick={() => setCurrentView('saved')} 
                 />
                 <DesktopNavItem 
                   icon={<User size={22} />} 
@@ -170,22 +158,10 @@ export default function App() {
                   onClick={() => setCurrentView('search')} 
                 />
                 <MobileNavItem 
-                  icon={<MessageSquare size={24} />} 
-                  label="Messages" 
-                  isActive={currentView === 'messages'} 
-                  onClick={() => setCurrentView('messages')} 
-                />
-                <MobileNavItem 
                   icon={<PlusSquare size={24} />} 
                   label="Add" 
                   isActive={currentView === 'add'} 
                   onClick={() => setCurrentView('add')} 
-                />
-                <MobileNavItem 
-                  icon={<Heart size={24} />} 
-                  label="Saved" 
-                  isActive={currentView === 'saved'} 
-                  onClick={() => setCurrentView('saved')} 
                 />
                 <MobileNavItem 
                   icon={<User size={24} />} 

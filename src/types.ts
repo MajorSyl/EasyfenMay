@@ -2,7 +2,7 @@ import React from 'react';
 
 // Types for our app
 export type UserRole = 'buyer' | 'agent' | 'service_provider';
-export type ListingType = 'property' | 'service';
+export type ListingType = 'property' | 'service' | 'hotel';
 export type ListingStatus = 'active' | 'sold' | 'rented' | 'inactive';
 export type PaymentMethod = 'orange_money' | 'afrimoney' | 'card';
 
@@ -39,6 +39,10 @@ export interface Listing {
   rate_type?: string;
   years_experience?: number;
   license_number?: string;
+  // Hotel specific
+  amenities?: string[];
+  room_type?: string;
+  hotel_rating?: number;
   // Included relations for UI
   profiles?: Profile;
 }

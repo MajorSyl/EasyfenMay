@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CheckCircle2, TrendingUp, Loader2, User, ChevronRight, Bell, Shield, LayoutDashboard } from 'lucide-react';
+import { Settings, ShieldCheck, Crown, ExternalLink, Activity, LogOut, FileText, Eye, CheckCircle2, TrendingUp, Loader2, User, ChevronRight, Bell, Shield, LayoutDashboard, Heart } from 'lucide-react';
 import { Profile, Listing } from '../types';
 import { useAppContext } from '../App';
-import { ListingCard } from './FeedView';
+import { ListingCard, ServiceCard } from './FeedView';
 import { mockProfile, mockListings } from '../lib/dataStore';
 
 export default function ProfileView() {
@@ -27,6 +27,20 @@ export default function ProfileView() {
     };
     fetchProfileAndListings();
   }, []);
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this listing?')) {
+      setUserListings(prev => prev.filter(l => l.id !== id));
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent, listing: Listing) => {
+    e.stopPropagation();
+    alert('Edit mode activated for: ' + listing.title);
+    // In a real app we would load this into the AddListingForm
+    // setCurrentView('add'); 
+  };
 
   // Filter listings based on active tab state
   const displayListings = userListings.filter(l => 
@@ -166,6 +180,22 @@ export default function ProfileView() {
                 <ChevronRight size={18} className="text-slate-300" />
              </button>
              
+             <button 
+                onClick={() => setCurrentView('saved')}
+                className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors"
+             >
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-500">
+                      <Heart size={18} className="fill-rose-100" />
+                   </div>
+                   <div className="text-left">
+                      <p className="text-sm font-bold text-slate-800">Saved Items</p>
+                      <p className="text-xs text-slate-500">View your favorite listings and services</p>
+                   </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+             </button>
+
              <button className="w-full flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
@@ -239,18 +269,38 @@ export default function ProfileView() {
                <p className="font-medium text-sm">No listings found in this category.</p>
              </div>
            ) : (
-             displayListings.map(listing => (
-               <ListingCard 
-                  key={listing.id} 
-                  listing={listing} 
-                  onClick={() => setSelectedListing(listing)}
-                  isSaved={savedListingIds.has(listing.id)}
-                  onSave={(e) => {
-                    e.stopPropagation();
-                    toggleSaved(listing.id);
-                  }}
-               />
-             ))
+             displayListings.map(listing => {
+               if (listing.listing_type === 'service') {
+                 return (
+                   <ServiceCard 
+                      key={listing.id} 
+                      listing={listing} 
+                      onClick={() => setSelectedListing(listing)}
+                      isSaved={savedListingIds.has(listing.id)}
+                      onSave={(e) => {
+                        e.stopPropagation();
+                        toggleSaved(listing.id);
+                      }}
+                      onEdit={(e) => handleEdit(e, listing)}
+                      onDelete={(e) => handleDelete(e, listing.id)}
+                   />
+                 );
+               }
+               return (
+                 <ListingCard 
+                    key={listing.id} 
+                    listing={listing} 
+                    onClick={() => setSelectedListing(listing)}
+                    isSaved={savedListingIds.has(listing.id)}
+                    onSave={(e) => {
+                      e.stopPropagation();
+                      toggleSaved(listing.id);
+                    }}
+                    onEdit={(e) => handleEdit(e, listing)}
+                    onDelete={(e) => handleDelete(e, listing.id)}
+                 />
+               );
+             })
            )}
         </div>
 
